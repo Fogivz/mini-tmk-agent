@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini TMK Agent - Simultaneous Translation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .content {
+            padding: 30px;
+        }
+        .mode-selector {
+            margin-bottom: 30px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .mode-selector select {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+        .mode-selector select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        .language-selector {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        .language-selector label {
+            font-weight: 600;
+            color: #555;
+        }
+        .language-selector select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .control-btn {
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            min-width: 180px;
+            margin: 0 10px;
+        }
+        .start-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        .start-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        .stop-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+            color: white;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+        }
+        .stop-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
+        }
+        .control-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .output-area {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .translation-pair {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #4facfe;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            opacity: 0;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .original {
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .original::before {
+            content: "🎤";
+            margin-right: 8px;
+        }
+        .translated {
+            color: #666;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 2px solid #e9ecef;
+            position: relative;
+        }
+        .translated::before {
+            content: "🌐";
+            margin-right: 8px;
+        }
+        .transcript-form {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .transcript-form input[type="file"] {
+            display: inline-block;
+            padding: 10px;
+            border: 2px dashed #4facfe;
+            border-radius: 8px;
+            background: #f8f9ff;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .transcript-form button {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .transcript-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+        .status {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+            color: #666;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Mini TMK Agent</h1>
+            <p>Real-time Simultaneous Translation</p>
+        </div>
+
+        <div class="content">
+            <div class="mode-selector">
+                <select id="modeSelect">
+                    <option value="stream">Stream Mode - Real-time Translation</option>
+                    <option value="transcript">Transcript Mode - File Processing</option>
+                </select>
+                <div class="language-selector" id="languageSelector">
+                    <label for="sourceLang">From:</label>
+                    <select id="sourceLang">
+                        <option value="zh">Chinese (中文)</option>
+                        <option value="en">English</option>
+                        <option value="ja">Japanese (日本語)</option>
+                        <option value="ko">Korean (한국어)</option>
+                        <option value="fr">French (Français)</option>
+                        <option value="de">German (Deutsch)</option>
+                        <option value="es">Spanish (Español)</option>
+                    </select>
+                    <label for="targetLang">To:</label>
+                    <select id="targetLang">
+                        <option value="en">English</option>
+                        <option value="zh">Chinese (中文)</option>
+                        <option value="ja">Japanese (日本語)</option>
+                        <option value="ko">Korean (한국어)</option>
+                        <option value="fr">French (Français)</option>
+                        <option value="de">German (Deutsch)</option>
+                        <option value="es">Spanish (Español)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="streamMode" class="mode-content">
+                <div class="controls">
+                    <button id="toggleBtn" class="control-btn start-btn">Start Translation</button>
+                </div>
+                <div id="outputArea" class="output-area">
+                    <div class="status">Click "Start Translation" to begin real-time translation</div>
+                </div>
+            </div>
+
+            <div id="transcriptMode" class="mode-content hidden">
+                <form class="transcript-form" id="transcriptForm">
+                    <input type="file" id="audioFile" accept=".wav" required>
+                    <br>
+                    <button type="submit">Process Audio File</button>
+                </form>
+                <div id="transcriptOutput" class="output-area hidden">
+                    <div class="translation-pair">
+                        <div class="original">Processing audio file...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let isTranslating = false;
+        let currentMode = 'stream';
+
+        // Mode switching
+        document.getElementById('modeSelect').addEventListener('change', function() {
+            currentMode = this.value;
+            updateModeDisplay();
+            resetState();
+        });
+
+        function updateModeDisplay() {
+            document.getElementById('streamMode').classList.toggle('hidden', currentMode !== 'stream');
+            document.getElementById('transcriptMode').classList.toggle('hidden', currentMode !== 'transcript');
+        }
+
+        function resetState() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            isTranslating = false;
+            document.getElementById('toggleBtn').textContent = 'Start Translation';
+            document.getElementById('toggleBtn').className = 'control-btn start-btn';
+            document.getElementById('outputArea').innerHTML = '<div class="status">Click "Start Translation" to begin real-time translation</div>';
+            document.getElementById('transcriptOutput').classList.add('hidden');
+        }
+
+        // Stream mode toggle
+        document.getElementById('toggleBtn').addEventListener('click', function() {
+            if (currentMode !== 'stream') return;
+
+            if (isTranslating) {
+                stopTranslation();
+            } else {
+                startTranslation();
+            }
+        });
+
+        function startTranslation() {
+            if (isTranslating) return;
+
+            const sourceLang = document.getElementById('sourceLang').value;
+            const targetLang = document.getElementById('targetLang').value;
+
+            ws = new WebSocket(`ws://localhost:8080/ws/stream?source=${sourceLang}&target=${targetLang}`);
+
+            ws.onopen = () => {
+                isTranslating = true;
+                document.getElementById('toggleBtn').textContent = 'Stop Translation';
+                document.getElementById('toggleBtn').className = 'control-btn stop-btn';
+                document.getElementById('outputArea').innerHTML = '<div class="status">Translation started... Speak into your microphone</div>';
+            };
+
+            ws.onmessage = (event) => {
+                const outputArea = document.getElementById('outputArea');
+                const data = event.data.trim();
+                if (data) {
+                    const lines = data.split('\n');
+                    const originalLine = lines.find(line => line.startsWith('原文:'));
+                    const translatedLine = lines.find(line => line.startsWith('翻译:'));
+
+                    if (originalLine && translatedLine) {
+                        const originalText = originalLine.replace('原文:', '').trim();
+                        const translatedText = translatedLine.replace('翻译:', '').trim();
+
+                        const pair = document.createElement('div');
+                        pair.className = 'translation-pair';
+                        pair.innerHTML = `
+                            <div class="original">${originalText}</div>
+                            <div class="translated">${translatedText}</div>
+                        `;
+                        outputArea.appendChild(pair);
+                        outputArea.scrollTop = outputArea.scrollHeight;
+                    }
+                }
+            };
+
+            ws.onclose = () => {
+                isTranslating = false;
+                document.getElementById('toggleBtn').textContent = 'Start Translation';
+                document.getElementById('toggleBtn').className = 'control-btn start-btn';
+                document.getElementById('outputArea').innerHTML += '<div class="status">Translation stopped</div>';
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                document.getElementById('outputArea').innerHTML += '<div class="status" style="color: red;">Connection error. Please check if services are running.</div>';
+            };
+        }
+
+        function stopTranslation() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        // Transcript mode
+        document.getElementById('transcriptForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('audioFile');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const outputArea = document.getElementById('transcriptOutput');
+            outputArea.classList.remove('hidden');
+            outputArea.innerHTML = '<div class="translation-pair"><div class="original">Processing audio file...</div></div>';
+
+            const formData = new FormData();
+            formData.append('audio', file);
+
+            try {
+                const response = await fetch('/transcript', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const text = await response.text();
+                    outputArea.innerHTML = `
+                        <div class="translation-pair">
+                            <div class="original">Original: ${text}</div>
+                            <div class="translated">Translation: Processing...</div>
+                        </div>
+                    `;
+                } else {
+                    outputArea.innerHTML = '<div class="translation-pair"><div class="original" style="color: red;">Transcription failed</div></div>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                outputArea.innerHTML = '<div class="translation-pair"><div class="original" style="color: red;">Error during transcription</div></div>';
+            }
+        });
+
+        // Initialize
+        updateModeDisplay();
+    </script>
+</body>
+</html>

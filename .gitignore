@@ -17,6 +17,7 @@ env/
 *.wav
 *.mp3
 *.ogg
+*.txt
 
 # Logs
 *.log
@@ -35,7 +36,10 @@ asr_service/venv/
 .env.local
 config.py
 
-# RTC local environment (do not commit)
+# RTC local environment 
+agora_cache.db
+agoradns.dat
+agorareport.dat
 agora_libs/
 *.token
 .env.rtc

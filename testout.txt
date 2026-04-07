@@ -1,0 +1,7 @@
+hello 大家好今天天气很好很荣幸来到这个地方
+Hello everyone, today the weather is very nice, and I'm honored to be here.
+
+export AGORA_APP_ID="6c490573f12a438fb8240a9b2d61222f"
+export AGORA_APP_CERT="448ef719460940e7a33c769a34753aac"
+export AGORA_CHANNEL="demo-room"
+export AGORA_UID="1001"

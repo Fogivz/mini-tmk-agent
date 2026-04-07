@@ -2,7 +2,16 @@ module mini-tmk-agent
 
 go 1.26.1
 
-require github.com/spf13/cobra v1.10.2
+require (
+	github.com/AgoraIO/Tools/DynamicKey/AgoraDynamicKey/go/src v0.0.0-20250825033728-374cd21f5220
+	github.com/gin-gonic/gin v1.12.0
+	github.com/go-audio/audio v1.0.0
+	github.com/go-audio/wav v1.1.0
+	github.com/gordonklaus/portaudio v0.0.0-20260203164431-765aa7dfa631
+	github.com/gorilla/websocket v1.5.3
+	github.com/spf13/cobra v1.10.2
+	github.com/zyy17/agora-server-sdk v0.0.0-20260321044141-7130db418195
+)
 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
@@ -11,17 +20,12 @@ require (
 	github.com/cloudwego/base64x v0.1.6 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
-	github.com/gin-gonic/gin v1.12.0 // indirect
-	github.com/go-audio/audio v1.0.0 // indirect
 	github.com/go-audio/riff v1.0.0 // indirect
-	github.com/go-audio/wav v1.1.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.30.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
-	github.com/gordonklaus/portaudio v0.0.0-20260203164431-765aa7dfa631 // indirect
-	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect

@@ -110,7 +110,7 @@ func (a *InterpreterAgent) runContinuousStream() {
 
 			fileName := fmt.Sprintf("temp_%d.wav", index)
 
-			err := audio.RecordWav(fileName, 3)
+			err := audio.RecordWav(fileName)
 			if err != nil {
 				if err.Error() == "no speech detected" {
 					continue

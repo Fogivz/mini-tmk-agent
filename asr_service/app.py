@@ -1,13 +1,11 @@
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form
 from funasr import AutoModel
 import tempfile
 import re
 import shutil
+import uuid
 
 app = FastAPI()
-
-# 支持的语言列表
-SUPPORTED_LANGUAGES = {"zh", "en", "ja", "es", "auto"}
 
 model = AutoModel(
     model="iic/SenseVoiceSmall",
@@ -22,12 +20,10 @@ def clean_asr_text(text: str) -> str:
 async def transcribe(
     file: UploadFile = File(...),
     source_lang: str = Form("auto"),
+    speaker_id: str = Form("unknown"),
+    req_id: str = Form(None),
 ):
-    if source_lang not in SUPPORTED_LANGUAGES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported language: {source_lang}. Supported languages: zh, en, ja, es, auto",
-        )
+    req_id = req_id or str(uuid.uuid4())
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
         shutil.copyfileobj(file.file, temp_file)
@@ -42,5 +38,7 @@ async def transcribe(
     clean_text = clean_asr_text(raw_text)
 
     return {
+        "req_id": req_id,
+        "speaker_id": speaker_id,
         "text": clean_text
     }

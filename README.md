@@ -1,6 +1,6 @@
 # Mini TMK Agent
 
-一个轻量级的实时同声传译代理，支持多语言语音识别和翻译。
+一个轻量级的实时同声传译agent，支持多语言语音识别和翻译。
 
 [![Go Version](https://img.shields.io/badge/Go-1.26.1-blue.svg)](https://golang.org/)
 [![Python Version](https://img.shields.io/badge/Python-3.8+-green.svg)](https://www.python.org/)
@@ -137,9 +137,6 @@ uvicorn app:app --port 8000
 # 实时流模式
 mini-tmk-agent stream --source-lang zh --target-lang en
 
-# 可能会出现alsa的报错信息，使用以下命令即可
-mini-tmk-agent stream --source-lang zh --target-lang en 2>/dev/null
-
 # 支持的语言参数：
 # --source-lang: zh(中文), en(英文), ja(日文), es(西班牙文)
 # --target-lang: en(英文), zh(中文), ja(日文), es(西班牙文)
@@ -147,6 +144,7 @@ mini-tmk-agent stream --source-lang zh --target-lang en 2>/dev/null
 #文件转录模式
 mini-tmk-agent transcript --file <your-audio-file> --output <destination-file-path> 
 ```
+eg: mini-tmk-agent transcript --file test.wav --output testout.txt
 
 ### 方式二：Web 部署（完整服务）
 
@@ -164,11 +162,6 @@ mini-tmk-agent transcript --file <your-audio-file> --output <destination-file-pa
 - 启动 ASR 服务（端口 8000）
 - 启动 Web UI（端口 8080）
 
-#### 2. 访问服务
-
-- **Web UI**：http://localhost:8080
-- **ASR API**：http://localhost:8000/docs
-
 #### 2. 使用 Web 界面
 
 1. 打开浏览器访问 http://localhost:8080
@@ -181,6 +174,116 @@ mini-tmk-agent transcript --file <your-audio-file> --output <destination-file-pa
 6. 点击 "Stop Translation" 停止
 
 ## 使用说明
+
+### RTC 终端互通模式（Agora）
+
+新增 `rtc` 命令后，可在两个终端通过同一个 RTC channel 进行实时翻译文本互传：
+
+- A 端（sender）：麦克风录音 -> ASR -> DeepSeek 翻译 -> RTC DataStream 发送
+- B 端（receiver）：接收翻译文本并在终端输出
+- 双向全双工（duplex）：每个终端都可同时说和收
+
+#### RTC 环境变量
+
+- `AGORA_APP_ID`：Agora App ID
+- `AGORA_APP_CERT`：Agora App Certificate（当不传 `AGORA_TOKEN` 时用于自动签发 token）
+- `AGORA_TOKEN`：可选，若提供则优先使用
+- `AGORA_CHANNEL`：频道名
+- `AGORA_UID`：当前终端用户 ID（A/B 端必须不同）
+- `DEEPSEEK_API_KEY`：翻译必需
+
+#### 如何获取 Agora App ID 和 App Certificate
+
+1. 打开 Agora Console：https://console.agora.io/
+2. 注册并登录账号。
+3. 在控制台创建一个新项目（Project）。
+4. 进入项目详情页后可查看 `App ID`。
+5. 在项目配置中启用并查看 `App Certificate`（首次通常需要手动开启证书）。
+6. 导出环境变量
+
+
+#### 启用 Agora RTC
+
+在项目中使用 agora-server-sdk 模块：
+
+```bash
+go get github.com/zyy17/agora-server-sdk
+```
+
+下载 Agora 库。将 Agora 库下载到当前目录的 agora_libs/ 文件夹：
+
+```bash
+curl -fsSL \
+  https://raw.githubusercontent.com/zyy17/agora-server-sdk/refs/heads/main/scripts/download_agora_libs.sh | bash
+```
+
+使用 Agora 库构建：
+
+# Linux
+```bash
+CGO_LDFLAGS="-L$(pwd)/agora_libs -Wl,-rpath-link=$(pwd)/agora_libs" go build -tags rtc -o mini-tmk-agent main.go
+```
+
+
+#### 双终端运行示例
+
+终端 A（发送端）：
+
+```bash
+# 使用动态库路径运行：
+export LD_LIBRARY_PATH=$(pwd)/agora_libs
+
+export AGORA_APP_ID="your_app_id"
+export AGORA_APP_CERT="your_app_cert"
+export AGORA_CHANNEL="demo-room"
+export AGORA_UID="1001"
+export DEEPSEEK_API_KEY="your_deepseek_key"
+
+./mini-tmk-agent rtc --role sender --source-lang zh --target-lang en --asr-url http://localhost:8000
+```
+
+终端 B（接收端，仅显示文本）：
+
+```bash
+# 使用动态库路径运行：
+export LD_LIBRARY_PATH=$(pwd)/agora_libs
+
+export AGORA_APP_ID="your_app_id"
+export AGORA_APP_CERT="your_app_cert"
+export AGORA_CHANNEL="demo-room"
+export AGORA_UID="1002"
+
+./mini-tmk-agent rtc --role receiver --source-lang zh --target-lang en 
+```
+
+
+#### 双向全双工示例（A/B 同时说和收）
+
+终端 A：
+
+```bash
+export AGORA_APP_ID="your_app_id"
+export AGORA_APP_CERT="your_app_cert"
+export AGORA_CHANNEL="demo-room"
+export AGORA_UID="1001"
+export DEEPSEEK_API_KEY="your_deepseek_key"
+
+./mini-tmk-agent rtc --role duplex --source-lang zh --target-lang en --asr-url http://localhost:8000
+```
+
+终端 B：
+
+```bash
+export AGORA_APP_ID="your_app_id"
+export AGORA_APP_CERT="your_app_cert"
+export AGORA_CHANNEL="demo-room"
+export AGORA_UID="terminal-b"
+export DEEPSEEK_API_KEY="1002"
+
+./mini-tmk-agent rtc --role duplex --source-lang en --target-lang zh --asr-url http://localhost:8000
+```
+
+说明：A/B 使用同一个 channel，但 UID 必须不同；两端都使用 `duplex` 即可实现全双工实时翻译。
 
 ### 流模式
 

@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Audio files
+*.wav
+*.mp3
+*.ogg
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+test_*.wav
+*.tmp
+asr_service/venv/
+
+# API keys
+.env.local
+config.py
+
+# RTC local environment (do not commit)
+agora_libs/
+*.token
+.env.rtc
+.env.agora
+rtc.env
+rtc.local.env
+
+# Local build artifacts
+mini-tmk-agent

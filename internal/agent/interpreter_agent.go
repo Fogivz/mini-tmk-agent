@@ -133,6 +133,10 @@ func (a *InterpreterAgent) runContinuousStream() {
 			default:
 			}
 
+			if audioFile == "" {
+				continue
+			}
+
 			result := a.Pipeline.Execute(audioFile)
 
 			// Parse result to get original and translated

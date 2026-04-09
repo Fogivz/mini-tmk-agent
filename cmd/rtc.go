@@ -1,3 +1,5 @@
+//go:build rtc
+
 package cmd
 
 import (

@@ -91,7 +91,7 @@ mini-tmk-agent/
 
 #### 克隆项目
 ```bash
-git clone https://github.com/your-username/mini-tmk-agent.git
+git clone https://github.com/Fogivz/mini-tmk-agent.git
 cd mini-tmk-agent
 ```
 

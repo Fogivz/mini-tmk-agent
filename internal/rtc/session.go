@@ -19,9 +19,9 @@ import (
 	rtctokenbuilder "github.com/AgoraIO/Tools/DynamicKey/AgoraDynamicKey/go/src/rtctokenbuilder2"
 	agorartc "github.com/zyy17/agora-server-sdk/agora/rtc"
 
-	"mini-tmk-agent/internal/asr"
-	"mini-tmk-agent/internal/audio"
-	"mini-tmk-agent/internal/deepseek"
+	"go-trans/internal/asr"
+	"go-trans/internal/audio"
+	"go-trans/internal/deepseek"
 )
 
 const (

@@ -8,9 +8,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "mini-tmk-agent",
+	Use:   "go-trans",
 	Short: "A lightweight simultaneous translation agent",
-	Long:  "mini-tmk-agent is a CLI tool for real-time translation and transcript generation",
+	Long:  "go-trans is a CLI tool for real-time translation and transcript generation",
 }
 
 func Execute() {

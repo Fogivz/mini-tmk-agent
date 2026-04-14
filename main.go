@@ -1,6 +1,6 @@
 package main
 
-import "mini-tmk-agent/cmd"
+import "go-trans/cmd"
 
 func main() {
 	cmd.Execute()

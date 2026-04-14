@@ -1,4 +1,4 @@
-#!/home/yangchengyao_2023155023/mini-tmk-agent/asr_service/venv/bin/python3
+#!/home/yangchengyao_2023155023/go-trans/asr_service/venv/bin/python3
 
 import sys
 import json

@@ -1,6 +1,6 @@
 build:
-	go build -o mini-tmk-agent
+	go build -o go-trans
 
 install: build
-	sudo mv mini-tmk-agent /usr/local/bin/
-	sudo chmod +x /usr/local/bin/mini-tmk-agent
+	sudo mv go-trans /usr/local/bin/
+	sudo chmod +x /usr/local/bin/go-trans

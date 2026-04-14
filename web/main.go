@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-	"mini-tmk-agent/internal/agent"
+	"go-trans/internal/agent"
 	"net/http"
 	"os"
 	"path/filepath"

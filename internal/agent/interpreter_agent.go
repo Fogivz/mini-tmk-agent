@@ -2,7 +2,7 @@ package agent
 
 import (
 	"fmt"
-	"mini-tmk-agent/internal/audio"
+	"go-trans/internal/audio"
 	"os"
 	"strings"
 )

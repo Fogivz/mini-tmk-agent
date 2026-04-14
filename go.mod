@@ -1,4 +1,4 @@
-module mini-tmk-agent
+module go-trans
 
 go 1.26.1
 

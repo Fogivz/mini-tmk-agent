@@ -2,8 +2,8 @@ package agent
 
 import (
 	"fmt"
-	"mini-tmk-agent/internal/asr"
-	"mini-tmk-agent/internal/deepseek"
+	"go-trans/internal/asr"
+	"go-trans/internal/deepseek"
 )
 
 func AudioCaptureStep() PipelineStep {

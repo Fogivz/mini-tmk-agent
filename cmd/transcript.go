@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"mini-tmk-agent/internal/agent"
+	"go-trans/internal/agent"
 
 	"github.com/spf13/cobra"
 )

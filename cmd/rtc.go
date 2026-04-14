@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"mini-tmk-agent/internal/rtc"
+	"go-trans/internal/rtc"
 
 	"github.com/spf13/cobra"
 )

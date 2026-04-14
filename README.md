@@ -18,12 +18,13 @@ go-trans 是一个基于 Go 的实时同声传译工具，支持：
 ## 架构
 
 ```
-mini-tmk-agent/
+go-trans/
 ├── main.go                # 主入口
 ├── cmd/                   # CLI 命令
 │   ├── root.go            # 根命令
 │   └── stream.go          # 流模式命令
     └── transcript.go      # 文件转录模式命令
+    └── rtc.go             # 双终端实时翻译命令
 ├── internal/              # 内部模块
 │   ├── agent/             # 代理核心逻辑
 │   │   ├── interpreter_agent.go  # 代理实现
@@ -35,7 +36,9 @@ mini-tmk-agent/
 │   ├── audio/             # 音频处理
 │   │   └── recorder.go    # WAV 录音器
 │   └── deepseek/          # 翻译服务
-│       └── client.go      # DeepSeek API 客户端
+│   │  └── client.go       # DeepSeek API 客户端
+    └── rtc/               # rtc服务
+│       └── session.go
 ├── web/                   # Web 界面
 │   ├── main.go           # Web 服务器
 │   └── index.html        # 前端界面
@@ -59,28 +62,7 @@ mini-tmk-agent/
 
 ### 依赖安装
 
-1. **安装 Go**：
-   ```bash
-   # Ubuntu/Debian
-   sudo apt update
-   sudo apt install golang-go
-
-   # macOS
-   brew install go
-
-   # 或从官网下载：https://golang.org/dl/
-   ```
-
-2. **安装 Python 和依赖**：
-   ```bash
-   # Ubuntu/Debian
-   sudo apt install python3 python3-pip python3-venv
-
-   # macOS
-   brew install python3
-   ```
-
-3. **音频库**：
+ **音频库**：
    ```bash
    # Ubuntu/Debian
    sudo apt install portaudio19-dev
@@ -91,8 +73,8 @@ mini-tmk-agent/
 
 #### 克隆项目
 ```bash
-git clone https://github.com/Fogivz/mini-tmk-agent.git
-cd mini-tmk-agent
+git clone https://github.com/Fogivz/go-trans.git
+cd go-trans
 ```
 
 ### 环境变量
@@ -135,16 +117,16 @@ uvicorn app:app --port 8000
 
 ```bash
 # 实时流模式
-mini-tmk-agent stream --source-lang zh --target-lang en
+go-trans stream --source-lang zh --target-lang en
 
 # 支持的语言参数：
 # --source-lang: zh(中文), en(英文), ja(日文), es(西班牙文)
 # --target-lang: en(英文), zh(中文), ja(日文), es(西班牙文)
 
 #文件转录模式
-mini-tmk-agent transcript --file <your-audio-file> --output <destination-file-path> 
+go-trans transcript --file <your-audio-file> --output <destination-file-path> 
 ```
-eg: mini-tmk-agent transcript --file test.wav --output testout.txt
+eg: go-trans transcript --file test.wav --output testout.txt
 
 ### 方式二：Web 部署（完整服务）
 
@@ -221,7 +203,7 @@ curl -fsSL \
 
 # Linux
 ```bash
-CGO_LDFLAGS="-L$(pwd)/agora_libs -Wl,-rpath-link=$(pwd)/agora_libs" go build -tags rtc -o mini-tmk-agent main.go
+CGO_LDFLAGS="-L$(pwd)/agora_libs -Wl,-rpath-link=$(pwd)/agora_libs" go build -tags rtc -o go-trans main.go
 ```
 
 
@@ -239,7 +221,7 @@ export AGORA_CHANNEL="demo-room"
 export AGORA_UID="1001"
 export DEEPSEEK_API_KEY="your_deepseek_key"
 
-./mini-tmk-agent rtc --role sender --source-lang zh --target-lang en --asr-url http://localhost:8000
+./go-trans rtc --role sender --source-lang zh --target-lang en --asr-url http://localhost:8000
 ```
 
 终端 B（接收端，仅显示文本）：
@@ -253,7 +235,7 @@ export AGORA_APP_CERT="your_app_cert"
 export AGORA_CHANNEL="demo-room"
 export AGORA_UID="1002"
 
-./mini-tmk-agent rtc --role receiver --source-lang zh --target-lang en 
+./go-trans rtc --role receiver --source-lang zh --target-lang en 
 ```
 
 
@@ -268,7 +250,7 @@ export AGORA_CHANNEL="demo-room"
 export AGORA_UID="1001"
 export DEEPSEEK_API_KEY="your_deepseek_key"
 
-./mini-tmk-agent rtc --role duplex --source-lang zh --target-lang en --asr-url http://localhost:8000
+./go-trans rtc --role duplex --source-lang zh --target-lang en --asr-url http://localhost:8000
 ```
 
 终端 B：
@@ -280,7 +262,7 @@ export AGORA_CHANNEL="demo-room"
 export AGORA_UID="terminal-b"
 export DEEPSEEK_API_KEY="1002"
 
-./mini-tmk-agent rtc --role duplex --source-lang en --target-lang zh --asr-url http://localhost:8000
+./go-trans rtc --role duplex --source-lang en --target-lang zh --asr-url http://localhost:8000
 ```
 
 说明：A/B 使用同一个 channel，但 UID 必须不同；两端都使用 `duplex` 即可实现全双工实时翻译。

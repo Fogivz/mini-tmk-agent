@@ -48,4 +48,4 @@ rtc.env
 rtc.local.env
 
 # Local build artifacts
-mini-tmk-agent
+go-trans

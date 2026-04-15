@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -12,8 +13,33 @@ import (
 	"github.com/gordonklaus/portaudio"
 )
 
-var threshold = 100.0
-var recordDuration = 3
+var threshold = loadThreshold()
+var recordDuration = loadRecordDuration()
+
+func loadThreshold() float64 {
+	v := strings.TrimSpace(os.Getenv("MINI_TMK_VAD_THRESHOLD"))
+	if v == "" {
+		// Default lower than before to reduce false "no speech" on quiet mics.
+		return 35.0
+	}
+	f, err := strconv.ParseFloat(v, 64)
+	if err != nil || f <= 0 {
+		return 35.0
+	}
+	return f
+}
+
+func loadRecordDuration() int {
+	v := strings.TrimSpace(os.Getenv("MINI_TMK_RECORD_DURATION_SEC"))
+	if v == "" {
+		return 3
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n < 1 || n > 10 {
+		return 3
+	}
+	return n
+}
 
 func shouldSilenceALSALogs() bool {
 	v := strings.TrimSpace(os.Getenv("MINI_TMK_ALSA_SILENT"))
@@ -84,13 +110,12 @@ func RecordWav(filePath string) error {
 		if err := stream.Read(); err != nil {
 			return err
 		}
+		if err := stream.Stop(); err != nil {
+			return err
+		}
 
 		if !HasSpeech(buffer, threshold) {
 			return fmt.Errorf("no speech detected")
-		}
-
-		if err := stream.Stop(); err != nil {
-			return err
 		}
 
 		file, err := os.Create(filePath)

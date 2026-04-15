@@ -8,68 +8,18 @@
 ## 简介
 
 go-trans 是一个基于 Go 的实时同声传译工具，支持：
-
+- **会话智能分析**：会话结束自动生成结构化复盘报告（摘要、观点、争议等）
 - **实时流模式**：连续语音识别和翻译
 - **转录模式**：音频文件转录和翻译
 - **多语言支持**：中文、英文、日文、西班牙文等
 - **Web UI**：现代化的浏览器界面
 - **CLI 工具**：命令行操作
-
-## 架构
-
-```
-go-trans/
-├── main.go                # 主入口
-├── cmd/                   # CLI 命令
-│   ├── root.go            # 根命令
-│   └── stream.go          # 流模式命令
-    └── transcript.go      # 文件转录模式命令
-    └── rtc.go             # 双终端实时翻译命令
-├── internal/              # 内部模块
-│   ├── agent/             # 代理核心逻辑
-│   │   ├── interpreter_agent.go  # 代理实现
-│   │   ├── pipeline.go           # 处理管道
-│   │   ├── steps.go              # 管道步骤
-│   │   └── memory.go             # 上下文记忆
-│   ├── asr/               # 语音识别客户端
-│   │   └── client.go      # ASR 服务客户端
-│   ├── audio/             # 音频处理
-│   │   └── recorder.go    # WAV 录音器
-│   └── deepseek/          # 翻译服务
-│   │  └── client.go       # DeepSeek API 客户端
-    └── rtc/               # rtc服务
-│       └── session.go
-├── web/                   # Web 界面
-│   ├── main.go           # Web 服务器
-│   └── index.html        # 前端界面
-├── asr_service/          # Python ASR 服务
-│   ├── app.py            # FastAPI 应用
-│   ├── requirements.txt  # Python 依赖
-│   └── venv/             # 虚拟环境
-├── Makefile              # 构建脚本
-├── start.sh              # 启动脚本
-└── go.mod                # Go 模块
-```
-
-### 核心组件
-
-- **代理引擎 (Go)**：基于管道模式的处理引擎
-- **ASR 服务 (Python)**：基于 FunASR 的语音识别服务
+- **会话 Agent**：会话结束自动生成摘要与双方观点
+- **ASR 服务**：基于 FunASR 的语音识别服务
 - **翻译服务**：集成 DeepSeek API 的翻译功能
-- **Web 界面**：Gin + WebSocket 的实时界面
-- **音频处理**：PortAudio 驱动的实时录音
+- **会话 Agent**：RAG + Skills + MCP 上下文增强
 
-
-### 依赖安装
-
- **音频库**：
-   ```bash
-   # Ubuntu/Debian
-   sudo apt install portaudio19-dev
-
-   # macOS
-   brew install portaudio
-   ```
+   
 
 #### 克隆项目
 ```bash
@@ -98,17 +48,7 @@ make install  # 安装到系统路径
 
 #### 2. 启动 ASR 服务
 ```bash
-cd asr_service
-
-# 创建虚拟环境
-python3 -m venv venv
-source venv/bin/activate
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 启动服务
-uvicorn app:app --port 8000
+./scripts/start_asr.sh
 ```
 
 #### 3. 使用 CLI 调用命令
@@ -123,59 +63,32 @@ go-trans stream --source-lang zh --target-lang en
 # --source-lang: zh(中文), en(英文), ja(日文), es(西班牙文)
 # --target-lang: en(英文), zh(中文), ja(日文), es(西班牙文)
 
-#文件转录模式
-go-trans transcript --file <your-audio-file> --output <destination-file-path> 
-```
 eg: go-trans transcript --file test.wav --output testout.txt
 
 ### 方式二：Web 部署（完整服务）
-
-提供完整的 Web 界面和 API 服务。
-
-
-#### 1. 一键启动
-```bash
 ./start.sh
 ```
-
-脚本将自动：
-- 创建 Python 虚拟环境
-- 安装依赖
-- 启动 ASR 服务（端口 8000）
-- 启动 Web UI（端口 8080）
 
 #### 2. 使用 Web 界面
 
 1. 打开浏览器访问 http://localhost:8080
 2. 选择工作模式：
-   - **Stream Mode**：实时翻译
-   - **Transcript Mode**：文件转录
 3. 选择源语言和目标语言
 4. 点击 "Start Translation" 开始
 5. 说话或上传音频文件
-6. 点击 "Stop Translation" 停止
-
-## 使用说明
 
 ### RTC 终端互通模式（Agora）
 
-新增 `rtc` 命令后，可在两个终端通过同一个 RTC channel 进行实时翻译文本互传：
-
-- A 端（sender）：麦克风录音 -> ASR -> DeepSeek 翻译 -> RTC DataStream 发送
-- B 端（receiver）：接收翻译文本并在终端输出
 - 双向全双工（duplex）：每个终端都可同时说和收
 
 #### RTC 环境变量
-
-- `AGORA_APP_ID`：Agora App ID
-- `AGORA_APP_CERT`：Agora App Certificate（当不传 `AGORA_TOKEN` 时用于自动签发 token）
 - `AGORA_TOKEN`：可选，若提供则优先使用
 - `AGORA_CHANNEL`：频道名
 - `AGORA_UID`：当前终端用户 ID（A/B 端必须不同）
 - `DEEPSEEK_API_KEY`：翻译必需
-
-#### 如何获取 Agora App ID 和 App Certificate
-
+- `AGENT_KNOWLEDGE_DIR`：本地知识库目录（默认 `knowledge`）
+- `AGENT_REPORT_DIR`：会话报告输出目录（默认 `reports`）
+- `AGENT_MCP_CONTEXT_URL`：可选 MCP 上下文 HTTP 地址（通过 `?query=` 取增强上下文）
 1. 打开 Agora Console：https://console.agora.io/
 2. 注册并登录账号。
 3. 在控制台创建一个新项目（Project）。
@@ -201,71 +114,73 @@ curl -fsSL \
 
 使用 Agora 库构建：
 
-# Linux
 ```bash
 CGO_LDFLAGS="-L$(pwd)/agora_libs -Wl,-rpath-link=$(pwd)/agora_libs" go build -tags rtc -o go-trans main.go
 ```
 
-
-#### 双终端运行示例
-
-终端 A（发送端）：
-
-```bash
-# 使用动态库路径运行：
-export LD_LIBRARY_PATH=$(pwd)/agora_libs
-
-export AGORA_APP_ID="your_app_id"
-export AGORA_APP_CERT="your_app_cert"
-export AGORA_CHANNEL="demo-room"
-export AGORA_UID="1001"
-export DEEPSEEK_API_KEY="your_deepseek_key"
-
-./go-trans rtc --role sender --source-lang zh --target-lang en --asr-url http://localhost:8000
-```
-
-终端 B（接收端，仅显示文本）：
-
-```bash
-# 使用动态库路径运行：
-export LD_LIBRARY_PATH=$(pwd)/agora_libs
-
-export AGORA_APP_ID="your_app_id"
-export AGORA_APP_CERT="your_app_cert"
-export AGORA_CHANNEL="demo-room"
-export AGORA_UID="1002"
-
-./go-trans rtc --role receiver --source-lang zh --target-lang en 
-```
-
-
-#### 双向全双工示例（A/B 同时说和收）
-
-终端 A：
+设置环境变量：
 
 ```bash
 export AGORA_APP_ID="your_app_id"
 export AGORA_APP_CERT="your_app_cert"
-export AGORA_CHANNEL="demo-room"
-export AGORA_UID="1001"
-export DEEPSEEK_API_KEY="your_deepseek_key"
-
-./go-trans rtc --role duplex --source-lang zh --target-lang en --asr-url http://localhost:8000
 ```
 
-终端 B：
+#### 一键启动 RTC 双端（tmux）
 
 ```bash
-export AGORA_APP_ID="your_app_id"
-export AGORA_APP_CERT="your_app_cert"
-export AGORA_CHANNEL="demo-room"
-export AGORA_UID="terminal-b"
-export DEEPSEEK_API_KEY="1002"
-
-./go-trans rtc --role duplex --source-lang en --target-lang zh --asr-url http://localhost:8000
+./scripts/start_rtc_pair.sh
 ```
 
-说明：A/B 使用同一个 channel，但 UID 必须不同；两端都使用 `duplex` 即可实现全双工实时翻译。
+如果提示 `tmux not found`，请先安装：
+
+```bash
+# Ubuntu/Debian
+sudo apt update && sudo apt install -y tmux
+
+# macOS
+brew install tmux
+```
+
+该脚本会：
+
+- 自动启动 ASR（8000）
+- 自动创建 tmux 双窗格
+- 在两个窗格分别启动 A/B 端 `rtc duplex`
+
+可选环境变量：
+
+- `AGORA_CHANNEL`（默认 `demo-room`）
+- `UID_A`（默认 `1001`）
+- `UID_B`（默认 `1002`）
+- `LANG_A_SRC`/`LANG_A_TGT`（默认 `zh` -> `en`）
+- `LANG_B_SRC`/`LANG_B_TGT`（默认 `en` -> `zh`）
+- `ASR_URL`（默认 `http://localhost:8000`）
+
+
+### 会话 Agent（RAG + MCP + Skills）
+
+RTC 会话中，系统会持续记录双方 turn（原文和译文），并在会话结束时自动生成报告：
+
+- `summary`：会话摘要
+- `viewpoints`：双方观点、共识与争议
+- `turns`：结构化会话记录
+
+报告默认写入 `reports/` 目录。
+
+
+RAG 工作方式：
+
+- 从 `knowledge/`（或 `--agent-knowledge-dir`）递归读取 `.txt/.md/.json`
+- 根据当前会话文本做关键词重叠检索，取 Top-K 片段作为增强上下文
+
+MCP 工作方式：
+
+- 若配置 `--agent-mcp-url` 或 `AGENT_MCP_CONTEXT_URL`，会在生成摘要/观点前获取外部上下文并注入 Prompt
+- 支持两种 MCP 源：
+   - HTTP 模式：例如 `http://localhost:9000/context`，请求时自动附带 `?query=...`
+   - Stdio 模式：例如 `npx -y @modelcontextprotocol/server-memory`
+- Stdio 模式会自动发现工具并优先尝试 `context/search/retrieve/query` 类工具
+- MCP 获取失败时会自动降级为 `(none)`，不影响主流程
 
 ### 流模式
 
@@ -322,20 +237,5 @@ export DEEPSEEK_API_KEY="1002"
    - 检查防火墙设置
    - 确认服务已启动
 
-### 日志查看
-
-```bash
-# 查看 Go 服务日志
-go run web/main.go
-
-# 查看 ASR 服务日志
-cd asr_service && python -m uvicorn app:app --log-level info
-```
 
 
-## 致谢
-
-- [FunASR](https://github.com/alibaba-damo-academy/FunASR) - 语音识别
-- [DeepSeek](https://platform.deepseek.com/) - 翻译服务
-- [Gin](https://gin-gonic.com/) - Go Web 框架
-- [FastAPI](https://fastapi.tiangolo.com/) - Python Web 框架

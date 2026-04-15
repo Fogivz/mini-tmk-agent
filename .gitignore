@@ -31,6 +31,8 @@ Thumbs.db
 test_*.wav
 *.tmp
 asr_service/venv/
+reports/
+crash_context_v1
 
 # API keys
 .env.local
